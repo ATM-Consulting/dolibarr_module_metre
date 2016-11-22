@@ -147,11 +147,7 @@ class Actionsmetre
 						
 						dol_include_once('/product/class/html.formproduct.class.php');
 						$formproduct = new FormProduct($db);
-						
-						if(defined('DONT_ADD_UNIT_SELECT') && DONT_ADD_UNIT_SELECT) {
-							null;
-						}	
-						else {
+
 							$sql = "SELECT e.tarif_poids, e.poids, pe.unite_vente,e.metre 
 	         									 FROM ".MAIN_DB_PREFIX.$object->table_element_line." as e 
 	         									 	LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pe ON (e.fk_product = pe.fk_object)
@@ -172,7 +168,7 @@ class Actionsmetre
 							?></td>');
 
 							<?php
-						}
+						
 						
 						?>
 
@@ -217,11 +213,6 @@ class Actionsmetre
          		<?php
          			$formproduct = new FormProduct($db);
          			//echo (count($instance->lines) >0)? "$('#tablelines').children().first().children().first().children().last().prev().prev().prev().prev().prev().after('<td align=\"right\" width=\"50\">Poids</td>');" : '' ;
-					
-				if(defined('DONT_ADD_UNIT_SELECT') && DONT_ADD_UNIT_SELECT) {
-					null;
-				}	
-				else {
 
          			foreach($object->lines as $line){
          				
@@ -277,7 +268,7 @@ class Actionsmetre
 		         			?></td>');
 
 		         	  	<?php 
-				}
+				
 					
 	         	
 	         	?>
