@@ -179,7 +179,10 @@ class Interfacemetretrigger
 			}
 			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
 			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
-				
+			
+			$monUrl = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']; 
+			header('Location: '.$monUrl);
+			
 			}elseif(($action === 'LINEORDER_INSERT' || $action === 'LINEPROPAL_INSERT' || $action === 'LINEBILL_INSERT' )  && $object->product_type ==0 && $conf->global->METRE_UNIT_PRICE_BY_CALCULATION){
 			if(get_class($object) == 'PropaleLigne'){
 				 $table = 'propal';
@@ -220,7 +223,8 @@ class Interfacemetretrigger
 			
 			
 			
-			
+			$monUrl = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']; 
+			header('Location: '.$monUrl);
 		}elseif(($action == 'LINEORDER_UPDATE' || $action == 'LINEPROPAL_UPDATE' || $action == 'LINEBILL_UPDATE'  ) 
 				&& (!isset($_REQUEST['notrigger']) || $_REQUEST['notrigger'] != 1)) {
 			if(get_class($object) == 'PropaleLigne'){
@@ -259,6 +263,8 @@ class Interfacemetretrigger
 				$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
 				$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
 			}
+			$monUrl = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']; 
+			header('Location: '.$monUrl);
 		}
 
         return 0;
