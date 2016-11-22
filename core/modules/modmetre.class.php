@@ -247,7 +247,7 @@ class modmetre extends DolibarrModules
 	function init($options='')
 	{
 		$sql = array();
-		
+		global $conf;
 		
 
 		define('INC_FROM_DOLIBARR',true);
@@ -257,9 +257,12 @@ class modmetre extends DolibarrModules
 
 		dol_include_once('/core/class/extrafields.class.php');
 		$result=$this->_load_tables('/metre/sql/');
-		
-
-		return $this->_init($sql, $options);
+		if($conf->global->TARIF_USE_METRE){
+			setEventMessage("Veuillez désactiver l'option metré du module tarif","errors");
+		}
+		else {
+			return $this->_init($sql, $options);
+		}
 	}
 
 	/**

@@ -62,7 +62,7 @@ class Actionsmetre
 	function formObjectOptions ($parameters, &$object, &$action, $hookmanager) {
 		global $db,$conf,$langs;
 		
-		$langs->load('tarif@tarif');
+		$langs->load('metre@metre');
 		
     	if (in_array('propalcard',explode(':',$parameters['context']))
     		|| in_array('ordercard',explode(':',$parameters['context']))
@@ -97,21 +97,25 @@ class Actionsmetre
 										,"Ok": function() {
 											var metre = $('input[name=metre_long]').val();
 											var larg = $('input[name=metre_larg]').val();
-											<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
+											
 											$('input[name=metre]').val(metre );
 											if(larg == ""){
 												$('input[name=poidsAff_product]').val( eval(metre) );	
+												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
 												if($('input[name=price_ht]').val()!= ""){
 													$('input[name=price_ht]').val(parseFloat($('input[name=price_ht]').val())*eval(metre));	
 												}
+													<?php } ?>
 											} else {
 												$('input[name=poidsAff_product]').val( eval(metre)*eval(larg) );
+												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
 												if($('input[name=price_ht]').val()!= ""){
 													$('input[name=price_ht]').val(parseFloat($('input[name=price_ht]').val())*eval(metre)*eval(larg));
 													
 												}
+												<?php } ?>
 											}
-											<?php } ?>
+										
 											$(this).dialog("close");
 										}
 										,"Annuler": function() {
@@ -189,10 +193,10 @@ class Actionsmetre
 		include_once(DOL_DOCUMENT_ROOT."/core/lib/product.lib.php");
 		include_once(DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php');
 		$langs->load("other");
-		$langs->load("tarif@tarif");
+		$langs->load("metre@metre");
 
 		define('INC_FROM_DOLIBARR', true);
-		dol_include_once('/tarif/config.php');
+		dol_include_once('/metre/config.php');
 		
 		if(!defined('DOL_DEFAULT_UNIT')){
 			define('DOL_DEFAULT_UNIT','weight');
@@ -234,11 +238,10 @@ class Actionsmetre
 						?>$('#row-<?=$idLine ?>').children().eq(3).after('<td align="right" tarif-col="conditionnement"><?php
 						
 							if(!is_null($res->tarif_poids)) {
-								if($conf->global->TARIF_CAN_SET_PACKAGE_ON_LINE) {
 									//if($res->poids != 69){ //69 = chiffre au hasard pour définir qu'on est sur un type "unité" et non "poids"
 										print number_format($res->tarif_poids,2,",","");
 									//}
-								}
+								
 								if($line->fk_product>0 && $res->poids != 69){
 									print " ".measuring_units_string($res->poids,($res->unite_vente) ? $res->unite_vente : DOL_DEFAULT_UNIT);
 								}
@@ -261,8 +264,11 @@ class Actionsmetre
 		         	$('#dp_desc').parent().next().next().next().after('<td align="right" tarif-col="conditionnement_product" type_unite="<?php echo $type_unite; ?>"><?php
 			         		
 			         			?><input class="poidsAff" type="text" value="0" name="poidsAff_product" id="poidsAffProduct" size="6" /><?php
-						
-							print ($type_unite=='unite') ? 'U' :  $formproduct->select_measuring_units("weight_unitsAff_product", ($res->unite_vente) ? $res->unite_vente : DOL_DEFAULT_UNIT,0); 
+							if($conf->global->METRE_USE_WEIGHT){
+								print ($type_unite=='unite') ? 'U' :  $formproduct->select_measuring_units("weight_unitsAff_product", ($res->unite_vente) ? $res->unite_vente : DOL_DEFAULT_UNIT,0); 
+							} else {
+								print 'U';
+							}
 		         			
 							
 								print '<a href="javascript:showMetre(0)">M</a><input type="hidden" name="metre" value="" />';
@@ -278,57 +284,9 @@ class Actionsmetre
 	         /*	$('#addpredefinedproduct').append('<input class="poids_product" type="hidden" value="1" name="poids" size="3">');
 	         	$('#addpredefinedproduct').append('<input class="weight_units_product" type="hidden" value="0" name="weight_units" size="3">');
 	         	*/
-	         	$('form#addproduct').append('<input class="poids_libre" type="hidden" value="1" name="poids" size="3">');
-	         	$('form#addproduct').append('<input class="weight_units_libre" type="hidden" value="0" name="weight_units" size="3">');
-	         
-	         	$('form#addproduct').submit(function() {
-	         		if($('[name=poidsAff_libre]').length>0) {
-		         		$('[name=poids]').val( $('[name=poidsAff_product]').val() );
-		         		if($('[name=weight_unitsAff_libre]').length>0) $('[name=weight_units]').val( $('select[name=weight_unitsAff_libre]').val() );
-		         	}
-	         		else {
-	         			$('[name=poids]').val( $('[name=poidsAff_libre]').val() );
-		         		if($('[name=weight_unitsAff_product]').length>0) $('[name=weight_units]').val( $('select[name=weight_unitsAff_product]').val() );
-		         		
-	         		}
-	         		
-	         		return true;
-	         	});
 	         	
-	         	//Sélection automatique de l'unité de mesure associé au produit sélectionné
-	         	$('#idprod, #idprodfournprice').change( function(){
-					$.ajax({
-						type: "POST"
-						,url: "<?=dol_buildpath('/custom/tarif/script/ajax.unite_poids.php',1); ?>"
-						,dataType: "json"
-						,data: {
-							fk_product: $(this).val(),
-							type: $(this).attr('id')
-						}
-						},"json").then(function(select){
-							$('td[tarif-col=conditionnement_product]').attr('type_unite', select.unite);
-							if(select.unite != ""){
-								if(select.unite_vente != ""){
-									$('select[name=weight_unitsAff_product]').remove();
-									$('td[tarif-col=conditionnement_product]').append(select.unite_vente);
-								}
-								$('select[name=weight_unitsAff_product]').val(select.unite);
-								$('select[name=weight_unitsAff_product]').prev().show();
-								$('#poidsAffProduct').val(select.poids);
-								$('input[name=poids]').val(select.poids);
-								$('select[name=weight_unitsAff_product]').show();
-								$('#AffUnite').hide();
-							}
-							else if(select.keep_field_cond == 1) {
-								$('select[name=weight_unitsAff_product]').hide();
-							}
-							else{
-								$('select[name=weight_unitsAff_product]').prev().hide();
-								$('select[name=weight_unitsAff_product]').hide();
-								//$('#AffUnite').show();
-							}
-						});
-				});
+	         	
+	         	
 
          	</script>
          	<?php

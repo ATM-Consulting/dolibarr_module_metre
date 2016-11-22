@@ -112,6 +112,14 @@ $var=!$var;
 	print ajax_constantonoff('METRE_UNIT_PRICE_BY_CALCULATION');
 	print '</td></tr>';
 
+$var=!$var;
+	print '<tr '.$bc[$var].'>';
+	print '<td>'.$langs->trans("UseWeight").'</td>';
+	print '<td align="center" width="20">&nbsp;</td>';
+	print '<td align="center" width="300">';
+	print ajax_constantonoff('METRE_USE_WEIGHT');
+	print '</td></tr>';
+
 print '</table>';
 
 llxFooter();

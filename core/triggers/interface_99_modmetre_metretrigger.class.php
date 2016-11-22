@@ -167,6 +167,7 @@ class Interfacemetretrigger
 			else{ //Sinon on est sur un tarif à l'unité donc pas de gestion de poids => 69 chiffre pris au hasard
 				$weight_units = 69;
 			}
+			
 			if(!empty($poids) && $object->product_type ==0 && $conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {
 				$object->price *= $poids;
 				$object->subprice *= $poids;
