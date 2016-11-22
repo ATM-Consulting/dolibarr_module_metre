@@ -96,6 +96,15 @@ class Interfacemetretrigger
             return $langs->trans("Unknown");
         }
     }
+	
+	function _updateTotauxLine(&$object,$qty){
+		//MAJ des totaux de la ligne
+		$object->total_ht  = price2num($object->subprice * $qty * (1 - $object->remise_percent / 100), 'MT');
+		$object->total_tva = price2num(($object->total_ht * (1 + ($object->tva_tx/100))) - $object->total_ht, 'MT');
+		$object->total_ttc = price2num($object->total_ht + $object->total_tva, 'MT');
+		if (method_exists($object, 'update_total')) $object->update_total();
+		elseif (method_exists($object, 'updateTotal')) $object->updateTotal();
+	}
 
     /**
      * Function called when a Dolibarrr business event is done.
@@ -111,7 +120,145 @@ class Interfacemetretrigger
      */
     public function run_trigger($action, $object, $user, $langs, $conf)
     {
-       
+        if(!defined('INC_FROM_DOLIBARR'))define('INC_FROM_DOLIBARR',true);
+		dol_include_once('/tarif/config.php');
+		dol_include_once('/tarif/class/tarif.class.php');
+		dol_include_once('/commande/class/commande.class.php');
+		dol_include_once('/fourn/class/fournisseur.commande.class.php');
+		dol_include_once('/compta/facture/class/facture.class.php');
+		dol_include_once('/comm/propal/class/propal.class.php');
+		dol_include_once('/dispatch/class/dispatchdetail.class.php');
+		
+		global $user, $db,$conf;
+		
+		if (($action === 'LINEORDER_INSERT' || $action === 'LINEPROPAL_INSERT' || $action === 'LINEBILL_INSERT' ) 
+			&& (!isset($_REQUEST['notrigger']) || $_REQUEST['notrigger'] != 1)
+			&& (!empty($object->fk_product) || !empty($_REQUEST['idprodfournprice']))
+			&& (!empty($_REQUEST['addline_predefined']) || !empty($_REQUEST['addline_libre'])  || !empty($_REQUEST['prod_entry_mode']))) {
+				if(get_class($object) == 'PropaleLigne'){
+				 $table = 'propal';
+				 $tabledet = 'propaldet';
+			}
+			elseif(get_class($object) == 'OrderLine'){
+				 $table = 'commande';
+				 $tabledet = 'commandedet';
+			}
+			elseif(get_class($object) == 'FactureLigne'){
+				 $table = 'facture';
+				 $tabledet = 'facturedet';
+			}
+			elseif(get_class($object) == 'CommandeFournisseur' || get_class($object) == 'CommandeFournisseurLigne'){
+				$table = "commande_fournisseur"; 
+				$tabledet = 'commande_fournisseurdet'; 
+				$parentfield = 'fk_commande';
+			}
+			
+			if(!empty($_REQUEST['poidsAff_product'])){ //Si un poids produit a été transmis
+				$poids = ($_REQUEST['poidsAff_product'] > 0) ? $_REQUEST['poidsAff_product'] : 1;
+				
+			}
+			elseif(!empty($_REQUEST['poidsAff_libre'])){ //Si un poids ligne libre a été transmis
+				$poids = ($_REQUEST['poidsAff_libre'] > 0) ? $_REQUEST['poidsAff_libre'] : 1;
+			}
+		
+			if(isset($_REQUEST['weight_unitsAff_product'])){ //Si on a un unité produit transmise
+				$weight_units = $_REQUEST['weight_unitsAff_product'];
+			}
+			else{ //Sinon on est sur un tarif à l'unité donc pas de gestion de poids => 69 chiffre pris au hasard
+				$weight_units = 69;
+			}
+			if(!empty($poids) && $object->product_type ==0 && $conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {
+				$object->price *= $poids;
+				$object->subprice *= $poids;
+				
+				$this->_updateTotauxLine($object,$object->qty);
+				$object->update($user);	
+				
+				
+			}
+			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
+			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
+				
+			}elseif(($action === 'LINEORDER_INSERT' || $action === 'LINEPROPAL_INSERT' || $action === 'LINEBILL_INSERT' )  && $object->product_type ==0 && $conf->global->METRE_UNIT_PRICE_BY_CALCULATION){
+			if(get_class($object) == 'PropaleLigne'){
+				 $table = 'propal';
+				 $tabledet = 'propaldet';
+			}
+			elseif(get_class($object) == 'OrderLine'){
+				 $table = 'commande';
+				 $tabledet = 'commandedet';
+			}
+			elseif(get_class($object) == 'FactureLigne'){
+				 $table = 'facture';
+				 $tabledet = 'facturedet';
+			}
+			elseif(get_class($object) == 'CommandeFournisseur' || get_class($object) == 'CommandeFournisseurLigne'){
+				$table = "commande_fournisseur"; 
+				$tabledet = 'commande_fournisseurdet'; 
+				$parentfield = 'fk_commande';
+			}
+			
+			if(!empty($_REQUEST['poidsAff_product'])){ //Si un poids produit a été transmis
+				$poids = ($_REQUEST['poidsAff_product'] > 0) ? $_REQUEST['poidsAff_product'] : 1;
+				
+			}
+			elseif(!empty($_REQUEST['poidsAff_libre'])){ //Si un poids ligne libre a été transmis
+				$poids = ($_REQUEST['poidsAff_libre'] > 0) ? $_REQUEST['poidsAff_libre'] : 1;
+			}
+		
+			if(isset($_REQUEST['weight_unitsAff_product'])){ //Si on a un unité produit transmise
+				$weight_units = $_REQUEST['weight_unitsAff_product'];
+			}
+			else{ //Sinon on est sur un tarif à l'unité donc pas de gestion de poids => 69 chiffre pris au hasard
+				$weight_units = 69;
+			}
+			if(!empty($poids)){
+				$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
+				$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
+			}
+			
+			
+			
+			
+		}elseif(($action == 'LINEORDER_UPDATE' || $action == 'LINEPROPAL_UPDATE' || $action == 'LINEBILL_UPDATE'  ) 
+				&& (!isset($_REQUEST['notrigger']) || $_REQUEST['notrigger'] != 1)) {
+			if(get_class($object) == 'PropaleLigne'){
+				 $table = 'propal';
+				 $tabledet = 'propaldet';
+			}
+			elseif(get_class($object) == 'OrderLine'){
+				 $table = 'commande';
+				 $tabledet = 'commandedet';
+			}
+			elseif(get_class($object) == 'FactureLigne'){
+				 $table = 'facture';
+				 $tabledet = 'facturedet';
+			}
+			elseif(get_class($object) == 'CommandeFournisseur' || get_class($object) == 'CommandeFournisseurLigne'){
+				$table = "commande_fournisseur"; 
+				$tabledet = 'commande_fournisseurdet'; 
+				$parentfield = 'fk_commande';
+			}
+			
+			if(!empty($_REQUEST['poidsAff_product'])){ //Si un poids produit a été transmis
+				$poids = ($_REQUEST['poidsAff_product'] > 0) ? $_REQUEST['poidsAff_product'] : 1;
+				
+			}
+			elseif(!empty($_REQUEST['poidsAff_libre'])){ //Si un poids ligne libre a été transmis
+				$poids = ($_REQUEST['poidsAff_libre'] > 0) ? $_REQUEST['poidsAff_libre'] : 1;
+			}
+		
+			if(isset($_REQUEST['weight_unitsAff_product'])){ //Si on a un unité produit transmise
+				$weight_units = $_REQUEST['weight_unitsAff_product'];
+			}
+			else{ //Sinon on est sur un tarif à l'unité donc pas de gestion de poids => 69 chiffre pris au hasard
+				$weight_units = 69;
+			}
+			if(!empty($poids)){
+				$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
+				$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET tarif_poids = ".$poids.", poids = ".$weight_units." WHERE rowid = ".$object->rowid);
+			}
+		}
 
         return 0;
     }

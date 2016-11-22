@@ -5,3 +5,4 @@ ATMAbout = Ce module a été développé par <a href="http://www.atm-consulting.
 
 metreSetup = Configuration du module metre
 metreAbout = A propos du module metre
+UnitPriceByCalculation = Prix unitaire hors taxe calculé en fonction de la formule

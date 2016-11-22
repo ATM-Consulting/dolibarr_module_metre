@@ -248,7 +248,7 @@ class modmetre extends DolibarrModules
 	{
 		$sql = array();
 		
-		$result=$this->load_tables('/metre/sql/');
+		
 
 		define('INC_FROM_DOLIBARR',true);
 
@@ -256,7 +256,7 @@ class modmetre extends DolibarrModules
 		dol_include_once('/metre/script/create-maj-base.php');
 
 		dol_include_once('/core/class/extrafields.class.php');
-
+		$result=$this->_load_tables('/metre/sql/');
 		
 
 		return $this->_init($sql, $options);
