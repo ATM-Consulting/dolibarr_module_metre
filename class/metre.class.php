@@ -5,7 +5,7 @@ class TMetreCommandedet extends TObjetStd {
 		
 		parent::set_table(MAIN_DB_PREFIX.'commandedet');
 		
-		parent::add_champs('metre', array('type' => 'text', 'length' => '50'));
+		parent::add_champs('metre', 'type=text;');
 		
 		parent::_init_vars();
 		parent::start();
