@@ -260,8 +260,6 @@ class modmetre extends DolibarrModules
 		
 		if($conf->global->TARIF_USE_METRE){
 			setEventMessage("Veuillez désactiver l'option 'Utiliser la gestion du métré' du module tarif","errors");
-		} else if($conf->tarif->enabled && !$conf->global->TARIF_DONT_ADD_UNIT_SELECT){
-			setEventMessage("Veuillez activer l'option 'Ne pas ajouter la sélection du l'unité' du module tarif","errors");
 		} else {
 			return $this->_init($sql, $options);
 		}

@@ -100,19 +100,16 @@ class Actionsmetre
 											
 											$('input[name=metre]').val(metre );
 											if(larg == ""){
-												$('input[name=poidsAff_product]').val( eval(metre) );	
 												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
-												if($('input[name=price_ht]').val()!= ""){
-													$('input[name=price_ht]').val(parseFloat($('input[name=price_ht]').val())*eval(metre));	
-												}
+												$('input[name=qty]').val( eval(metre) );	
+												
+											
 													<?php } ?>
 											} else {
-												$('input[name=poidsAff_product]').val( eval(metre)*eval(larg) );
 												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
-												if($('input[name=price_ht]').val()!= ""){
-													$('input[name=price_ht]').val(parseFloat($('input[name=price_ht]').val())*eval(metre)*eval(larg));
-													
-												}
+												$('input[name=qty').val( eval(metre)*eval(larg) );
+												$('input[name=metre]').val("("+metre +")*("+larg+")" );
+												
 												<?php } ?>
 											}
 										
@@ -125,8 +122,8 @@ class Actionsmetre
 						});
 					});
 					
-					function showMetre() {
-						$('textarea[name=metre_long]').val( $('input[name=metre]').val() );	
+					function show_Metre() {
+						$('input[name=metre_long]').val( $('input[name=metre]').val() );	
 						$('#dialog-metre').dialog('open');	
 					}
 					
@@ -148,7 +145,7 @@ class Actionsmetre
 						dol_include_once('/product/class/html.formproduct.class.php');
 						$formproduct = new FormProduct($db);
 
-							$sql = "SELECT e.tarif_poids, e.poids, pe.unite_vente,e.metre 
+							$sql = "SELECT  pe.unite_vente,e.metre 
 	         									 FROM ".MAIN_DB_PREFIX.$object->table_element_line." as e 
 	         									 	LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pe ON (e.fk_product = pe.fk_object)
 	         									 WHERE e.rowid = ".$lineid;
@@ -156,16 +153,16 @@ class Actionsmetre
 							$res = $db->fetch_object($resql);
 							
 							?>$('input[name=qty]').parent().after('<td align="right"><?php
-										?><input class="poidsAff" type="text" value="0" name="poidsAff_product" id="poidsAffProduct" size="6" /><?php
+										?><?php
 							
 									
- 									print ($res->poids==69) ? 'U' : $formproduct->select_measuring_units("weight_unitsAff_product", ($res->unite_vente) ? $res->unite_vente : DOL_DEFAULT_UNIT, $res->poids); 
 							
 									
-									print '<a href="javascript:showMetre()">M</a><input type="hidden" name="metre" value="'.$res->metre.'" />';
+									print '<a href="javascript:show_Metre()">M</a><input type="hidden" name="metre" value="'.$res->metre.'" />';
 									
 							
 							?></td>');
+							
 
 							<?php
 						
@@ -174,7 +171,7 @@ class Actionsmetre
 
 					});
 				</script>
-				<?php
+				<?php 
 			}
 		}
 		
@@ -211,58 +208,17 @@ class Actionsmetre
         	?>
          	<script type="text/javascript">
          		<?php
-         			$formproduct = new FormProduct($db);
-         			//echo (count($instance->lines) >0)? "$('#tablelines').children().first().children().first().children().last().prev().prev().prev().prev().prev().after('<td align=\"right\" width=\"50\">Poids</td>');" : '' ;
-
-         			foreach($object->lines as $line){
-         				
-						$idLine = empty($line->id) ? $line->rowid : $line->id;
-						
-         				$sql = "SELECT e.tarif_poids, e.poids, pe.unite_vente 
-	         									 FROM ".MAIN_DB_PREFIX.$object->table_element_line." as e 
-	         									 	LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pe ON (e.fk_product = pe.fk_object)
-	         									 WHERE e.rowid = ".$idLine;
-
-         				$resql = $db->query($sql);
-						$res = $db->fetch_object($resql);
-						
-						?>$('#row-<?=$idLine ?>').children().eq(3).after('<td align="right" tarif-col="conditionnement"><?php
-						
-							if(!is_null($res->tarif_poids)) {
-									//if($res->poids != 69){ //69 = chiffre au hasard pour définir qu'on est sur un type "unité" et non "poids"
-										print number_format($res->tarif_poids,2,",","");
-									//}
-								
-								if($line->fk_product>0 && $res->poids != 69){
-									print " ".measuring_units_string($res->poids,($res->unite_vente) ? $res->unite_vente : DOL_DEFAULT_UNIT);
-								}
-								elseif($res->poids == 69){
-									print ' U';
-								}
-							}
-						?></td>'); <?php
-						//if($line->error != '') echo "alert('".$line->error."');";
-					}
 
 	         		?>
-		         	$('#tablelines .liste_titre > td').each(function(){
-		         		if($(this).html() == "Qté" || $(this).html() == "Qty"){
-						var weight_label = "<?=defined('WEIGHT_LABEL') ? WEIGHT_LABEL :  $langs->trans('Cond'); ?>";
-		         			$(this).after('<td align="right" width="140">'+weight_label+'</td>');
-					}
-		         	});
+
 
 		         	$('#dp_desc').parent().next().next().next().after('<td align="right" tarif-col="conditionnement_product" type_unite="<?php echo $type_unite; ?>"><?php
 			         		
-			         			?><input class="poidsAff" type="text" value="0" name="poidsAff_product" id="poidsAffProduct" size="6" /><?php
-							if($conf->global->METRE_USE_WEIGHT){
-								print ($type_unite=='unite') ? 'U' :  $formproduct->select_measuring_units("weight_unitsAff_product", ($res->unite_vente) ? $res->unite_vente : DOL_DEFAULT_UNIT,0); 
-							} else {
-								print 'U';
-							}
+			         			?><?php
+							
 		         			
 							
-								print '<a href="javascript:showMetre(0)">M</a><input type="hidden" name="metre" value="" />';
+								print '<a href="javascript:show_Metre(0)">M</a><input type="hidden" name="metre" value="" />';
 							
 							
 		         			?></td>');
