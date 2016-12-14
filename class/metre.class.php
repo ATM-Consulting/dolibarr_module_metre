@@ -5,7 +5,7 @@ class TMetreCommandedet extends TObjetStd {
 		
 		parent::set_table(MAIN_DB_PREFIX.'commandedet');
 		
-		parent::add_champs('metre', 'type=text;');
+		parent::add_champs('metre', array('type'=>'text'));
 		
 		parent::_init_vars();
 		parent::start();
@@ -18,7 +18,7 @@ class TMetrePropaldet extends TObjetStd {
 		
 		parent::set_table(MAIN_DB_PREFIX.'propaldet');
 	
-		parent::add_champs('metre','type=text;');
+		parent::add_champs('metre',array('type'=>'text'));
 		
 		parent::_init_vars();
 		parent::start();
@@ -31,7 +31,7 @@ class TMetreFacturedet extends TObjetStd {
 		
 		parent::set_table(MAIN_DB_PREFIX.'facturedet');
 		
-		parent::add_champs('metre','type=text;');
+		parent::add_champs('metre',array('type'=>'text'));
 		
 		parent::_init_vars();
 		parent::start();
@@ -44,7 +44,7 @@ class TMetreCommandeFourndet extends TObjetStd {
 		
 		parent::set_table(MAIN_DB_PREFIX.'commande_fournisseurdet');
 		
-		parent::add_champs('metre','type=text;');
+		parent::add_champs('metre',array('type'=>'text'));
 		
 		parent::_init_vars();
 		parent::start();

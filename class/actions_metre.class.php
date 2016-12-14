@@ -163,7 +163,7 @@ class Actionsmetre
 							
 							?></td>');
 							
-
+							$('#init-metre').hide();
 							<?php
 						
 						
@@ -212,7 +212,7 @@ class Actionsmetre
 	         		?>
 
 
-		         	$('#dp_desc').parent().next().next().next().after('<td align="right" tarif-col="conditionnement_product" type_unite="<?php echo $type_unite; ?>"><?php
+		         	$('#qty').parent().after('<td align="right"  id="init-metre"><?php
 			         		
 			         			?><?php
 							
