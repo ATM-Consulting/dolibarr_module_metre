@@ -11,13 +11,21 @@ if(!defined('INC_FROM_DOLIBARR')) {
 }
 
 
-/* uncomment
+dol_include_once('/metre/class/metre.class.php');
+	
+	$PDOdb=new TPDOdb;
+	//$PDOdb->debug=true;
 
 
-dol_include_once('/mymodule/class/xxx.class.php');
-
-$PDOdb=new TPDOdb;
-
-$o=new TXXX($db);
-$o->init_db_by_vars($PDOdb);
-*/
+	$o=new TMetreCommandedet;
+	$o->init_db_by_vars($PDOdb);
+	
+	$o=new TMetrePropaldet;
+	$o->init_db_by_vars($PDOdb);
+	
+	$o=new TMetreFacturedet;
+	$o->init_db_by_vars($PDOdb);
+	
+	$o=new TMetreCommandeFourndet;
+	$o->init_db_by_vars($PDOdb);
+	
