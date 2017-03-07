@@ -71,24 +71,28 @@ class Actionsmetre
         	
 			?>
 				<script type="text/javascript">
-					var dialog = '<div id="dialog-metre" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p><label name="label_long">Longueur :</label><input type="text" name="metre_long" /><label name="label_larg">Largeur : </label><input type="text" name="metre_larg" /></p></div>';
+					var dialog = '<div id="dialog-metre" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p>'
+						+'<label name="label_long"><?php echo $langs->trans('Height') ?> :</label><input type="text" name="metre_long" />'
+						+'<label name="label_larg"><?php echo $langs->trans('Width') ?> : </label><input type="text" name="metre_larg" />'
+						+'<label name="label_depth"><?php echo $langs->trans('Depth') ?> : </label><input type="text" name="metre_depth" />'
+					+'</p></div>';
 					$(document).ready(function() {
 						$('body').append(dialog);
 						$('#dialog-metre').dialog({
 							autoOpen:false
 							,buttons: { 
-										"Mode Avancé" : function(){
+										"<?php echo $langs->trans('AdvancedMode') ?>" : function(){
 											$('input[name=metre_larg]').hide();
 											$('label[name=label_larg]').hide();
-											if($("span:contains('Mode Avancé')")){
+											if($("span:contains('<?php echo $langs->trans('AdvancedMode') ?>')")){
 												if($("span:contains('Mode Standard')").text()){
 													$("span:contains('Mode Standard')").text('Mode Avancé');
-													$('label[name=label_long]').text('Longueur  :');
+													$('label[name=label_long]').text('<?php echo $langs->trans('Height') ?>  :');
 													$('input[name=metre_larg]').show();
 													$('label[name=label_larg]').show();
 												} else {
-													$("span:contains('Mode Avancé')").text('Mode Standard');
-													$('label[name=label_long]').text('Formule  :');
+													$("span:contains('<?php echo $langs->trans('AdvancedMode') ?>')").text('Mode Standard');
+													$('label[name=label_long]').text('<?php echo $langs->trans('Formule') ?>  :');
 													$('input[name=metre_larg]').val("");
 												}
 											
@@ -97,20 +101,18 @@ class Actionsmetre
 										,"Ok": function() {
 											var metre = $('input[name=metre_long]').val();
 											var larg = $('input[name=metre_larg]').val();
+											var depth = $('input[name=metre_depth]').val();
 											
-											$('input[name=metre]').val(metre );
+											$('input[name=metre]').val( metre );
 											if(larg == ""){
-												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
-												$('input[name=qty]').val( eval(metre) );	
+												$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
 												
-											
-													<?php } ?>
 											} else {
-												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
-												$('input[name=qty').val( eval(metre)*eval(larg) );
-												$('input[name=metre]').val("("+metre +")*("+larg+")" );
+											
+												metre = "("+metre +")*("+larg+")*("+depth+")";
 												
-												<?php } ?>
+												$('input[name=qty').val( eval( ' ('+ metre +')' ) );
+												$('input[name=metre]').val( metre );
 											}
 										
 											$(this).dialog("close");
@@ -152,16 +154,10 @@ class Actionsmetre
 							$resql = $db->query($sql);
 							$res = $db->fetch_object($resql);
 							
-							?>$('input[name=qty]').parent().after('<td align="right"><?php
+							?>$('input[name=qty]').after('<?php
 										?><?php
-							
-									
-							
-									
 									print '<a href="javascript:show_Metre()">M</a><input type="hidden" name="metre" value="'.$res->metre.'" />';
-									
-							
-							?></td>');
+							?>');
 							
 							$('#init-metre').hide();
 							<?php
