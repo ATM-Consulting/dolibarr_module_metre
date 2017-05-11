@@ -62,57 +62,56 @@ class Actionsmetre
 	function formObjectOptions ($parameters, &$object, &$action, $hookmanager) {
 		global $db,$conf,$langs;
 		
-		$langs->load('metre@metre');
-		
-    	if (in_array('propalcard',explode(':',$parameters['context']))
+		if (in_array('propalcard',explode(':',$parameters['context']))
     		|| in_array('ordercard',explode(':',$parameters['context']))
     		|| in_array('invoicecard',explode(':',$parameters['context'])))
         {
+        	$langs->load('metre@metre');
         	
 			?>
 				<script type="text/javascript">
-					var dialog = '<div id="dialog-metre" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p><label name="label_long">Longueur :</label><input type="text" name="metre_long" /><label name="label_larg">Largeur : </label><input type="text" name="metre_larg" /></p></div>';
+					var metre_dialog_standard = 1;
+				
+					var dialog = '<div id="dialog-metre" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p>'
+						+'<div class="standard"><div><label name="label_long"><?php echo $langs->trans('Height') ?> :</label><input type="text" name="metre_long" /></div>'
+						+'<div><label name="label_larg"><?php echo $langs->trans('Width') ?> : </label><input type="text" name="metre_larg" /></div>'
+						+'<div rel="metre_depth"><label name="label_depth"><?php echo $langs->trans('Depth') ?> : </label><input type="text" name="metre_depth" /></div></div>'
+						+'<div class="advanced" rel="formule" style="display:none;"><label name="formule"><?php echo $langs->trans('Formule') ?> : </label><br /><textarea name="formule" size="20" rows="3"></textarea></div>'
+					+'</p></div>';
+					
 					$(document).ready(function() {
+						
 						$('body').append(dialog);
 						$('#dialog-metre').dialog({
 							autoOpen:false
 							,buttons: { 
-										"Mode Avancé" : function(){
-											$('input[name=metre_larg]').hide();
-											$('label[name=label_larg]').hide();
-											if($("span:contains('Mode Avancé')")){
-												if($("span:contains('Mode Standard')").text()){
-													$("span:contains('Mode Standard')").text('Mode Avancé');
-													$('label[name=label_long]').text('Longueur  :');
-													$('input[name=metre_larg]').show();
-													$('label[name=label_larg]').show();
-												} else {
-													$("span:contains('Mode Avancé')").text('Mode Standard');
-													$('label[name=label_long]').text('Formule  :');
-													$('input[name=metre_larg]').val("");
-												}
-											
-											}
+										"<?php echo $langs->transnoentities('AdvancedMode') ?>" : function(){
+											metre_dialog_show();
+
 										}
 										,"Ok": function() {
-											var metre = $('input[name=metre_long]').val();
-											var larg = $('input[name=metre_larg]').val();
-											
-											$('input[name=metre]').val(metre );
-											if(larg == ""){
-												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
-												$('input[name=qty]').val( eval(metre) );	
+
+											if(metre_dialog_standard == 1) {
+												var vlong = parseFloat( $('input[name=metre_long]').val() );
+												var larg = parseFloat( $('input[name=metre_larg]').val() );
+												var depth =parseFloat( $('input[name=metre_depth]').val() );
+
+												if(isNaN(vlong)) vlong = 1;
+												if(isNaN(larg)) larg = 1;
+												if(isNaN(depth)) depth = 1;
 												
-											
-													<?php } ?>
-											} else {
-												<?php if($conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {?>
-												$('input[name=qty').val( eval(metre)*eval(larg) );
-												$('input[name=metre]').val("("+metre +")*("+larg+")" );
+												var metre = "("+vlong +")*("+larg+")*("+depth+")";
+
 												
-												<?php } ?>
 											}
-										
+											else {
+												var metre = $("textarea[name=formule]").val();
+											}
+
+											$('input[name=metre]').val( metre );
+											$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
+											
+											
 											$(this).dialog("close");
 										}
 										,"Annuler": function() {
@@ -120,124 +119,86 @@ class Actionsmetre
 										}
 									  }
 						});
-					});
 					
-					function show_Metre() {
-						$('input[name=metre_long]').val( $('input[name=metre]').val() );	
-						$('#dialog-metre').dialog('open');	
+         			<?php
+         			
+         			$metre_formule = ''; 
+         			
+					if($action === 'editline' || $action === "edit_line"){
+						
+						$lineid = GETPOST('lineid');
+						
+						$sql = "SELECT e.metre FROM ".MAIN_DB_PREFIX.$object->table_element_line." as e WHERE e.rowid = ".$lineid;
+						$resql = $db->query($sql);
+						$obj= $db->fetch_object($resql);
+						
+						$metre_formule =  $obj->metre ;
+						
+						if(preg_match ( '/(\(\d*\.?\d*\)\**){3}/',$metre_formule)) {
+							$matches=array();
+							$matches = sscanf($obj->metre, "(%f)*(%f)*(%f)");
+																	
+							echo ' $("#dialog-metre input[name=metre_long]").val("'.$matches[0].'"); ';
+							echo ' $("#dialog-metre input[name=metre_larg]").val("'.$matches[1].'"); ';
+							echo ' $("#dialog-metre input[name=metre_depth]").val("'.$matches[2].'"); ';
+							
+						}
+						else {
+							echo 'metre_dialog_show();'; // switch en mode avancé
+						}
+						
+						echo ' $("input[name=metre]").val("'.$metre_formule.'"); ';
+						
+					}		
+						?>
+
+						var $qtyfield = $('input#qty'); 
+	         			$qtyfield.closest('td').attr('nowrap','nowrap');
+	         			$qtyfield.after(' <a href="javascript:show_Metre()"><?php echo img_picto($langs->trans('Metre'), 'object_metre@metre',' align="middle" ') ?></a><input type="hidden" name="metre" value="<?php echo $metre_formule; ?>" />');
+					
+					});
+
+					function metre_dialog_show() {
+						
+						if(metre_dialog_standard == 1) {
+							$('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('StandardMode') ?>');
+							$('div.standard').hide();
+							$('div.advanced').show();
+							metre_dialog_standard = 0;
+						}
+						else{
+							$('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('AdvancedMode') ?>');
+
+							$('div.standard').show();
+							$('div.advanced').hide();
+							
+							metre_dialog_standard = 1;
+						}
+
+
 					}
 					
+					function show_Metre() {
+						var metre = $('input[name=metre]').val();
+						
+						$("textarea[name=formule]").val( metre );
+							
+						$('#dialog-metre').dialog('open');	
+					}
+
+					<?php 
+					
+					?>
 				</script>
 					
 				
 				<?php 
 		
-			if($action === 'editline' || $action === "edit_line"){
-				
-				$lineid = GETPOST('lineid');
-				
-				?>	
-				<script type="text/javascript">
-					/* script tarif */
-					$(document).ready(function(){
-						<?php
-						
-						dol_include_once('/product/class/html.formproduct.class.php');
-						$formproduct = new FormProduct($db);
-
-							$sql = "SELECT  pe.unite_vente,e.metre 
-	         									 FROM ".MAIN_DB_PREFIX.$object->table_element_line." as e 
-	         									 	LEFT JOIN ".MAIN_DB_PREFIX."product_extrafields as pe ON (e.fk_product = pe.fk_object)
-	         									 WHERE e.rowid = ".$lineid;
-							$resql = $db->query($sql);
-							$res = $db->fetch_object($resql);
-							
-							?>$('input[name=qty]').parent().after('<td align="right"><?php
-										?><?php
-							
-									
-							
-									
-									print '<a href="javascript:show_Metre()">M</a><input type="hidden" name="metre" value="'.$res->metre.'" />';
-									
-							
-							?></td>');
-							
-							$('#init-metre').hide();
-							<?php
-						
-						
-						?>
-
-					});
-				</script>
-				<?php 
-			}
+			
 		}
 		
 	}
 
-	function formBuilddocOptions ($parameters, &$object, &$action, $hookmanager) {
-		global $db,$langs,$conf;
-		include_once(DOL_DOCUMENT_ROOT."/commande/class/commande.class.php");
-		include_once(DOL_DOCUMENT_ROOT."/compta/facture/class/facture.class.php");
-		include_once(DOL_DOCUMENT_ROOT."/comm/propal/class/propal.class.php");
-		include_once(DOL_DOCUMENT_ROOT."/core/lib/functions.lib.php");
-		include_once(DOL_DOCUMENT_ROOT."/core/lib/product.lib.php");
-		include_once(DOL_DOCUMENT_ROOT.'/product/class/html.formproduct.class.php');
-		$langs->load("other");
-		$langs->load("metre@metre");
-
-		define('INC_FROM_DOLIBARR', true);
-		dol_include_once('/metre/config.php');
-		
-		if(!defined('DOL_DEFAULT_UNIT')){
-			define('DOL_DEFAULT_UNIT','weight');
-		}
-		
-		if (in_array('propalcard',explode(':',$parameters['context']))
-			|| in_array('ordercard',explode(':',$parameters['context']))
-			|| in_array('invoicecard',explode(':',$parameters['context']))) 
-        {
-        		
-			if($object->line->error)
-				dol_htmloutput_mesg($object->line->error,'', 'error');
-			
-			//var_dump($object->lines);
-			
-        	?>
-         	<script type="text/javascript">
-         		<?php
-
-	         		?>
 
 
-		         	$('#qty').parent().after('<td align="right"  id="init-metre"><?php
-			         		
-			         			?><?php
-							
-		         			
-							
-								print '<a href="javascript:show_Metre(0)">M</a><input type="hidden" name="metre" value="" />';
-							
-							
-		         			?></td>');
-
-		         	  	<?php 
-				
-					
-	         	
-	         	?>
-	         /*	$('#addpredefinedproduct').append('<input class="poids_product" type="hidden" value="1" name="poids" size="3">');
-	         	$('#addpredefinedproduct').append('<input class="weight_units_product" type="hidden" value="0" name="weight_units" size="3">');
-	         	*/
-	
-	         	
-
-         	</script>
-         	<?php
-        }
-
-
-}
 }

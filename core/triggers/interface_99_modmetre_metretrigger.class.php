@@ -113,18 +113,21 @@ class Interfacemetretrigger
      */
     public function run_trigger($action, $object, $user, $langs, $conf)
     {
-        if(!defined('INC_FROM_DOLIBARR'))define('INC_FROM_DOLIBARR',true);
-		dol_include_once('/tarif/config.php');
-		dol_include_once('/tarif/class/tarif.class.php');
-		dol_include_once('/commande/class/commande.class.php');
-		dol_include_once('/fourn/class/fournisseur.commande.class.php');
-		dol_include_once('/compta/facture/class/facture.class.php');
-		dol_include_once('/comm/propal/class/propal.class.php');
-		dol_include_once('/dispatch/class/dispatchdetail.class.php');
-		
-		global $user, $db,$conf;
-		
-		if (($action === 'LINEORDER_INSERT' || $action === 'LINEPROPAL_INSERT' || $action === 'LINEBILL_INSERT' )  && $conf->global->METRE_UNIT_PRICE_BY_CALCULATION) {
+    	if($action == 'LINEORDER_UPDATE' || $action == 'LINEPROPAL_UPDATE' || $action == 'LINEBILL_UPDATE'
+				|| $action === 'LINEORDER_INSERT' || $action === 'LINEPROPAL_INSERT' || $action === 'LINEBILL_INSERT'
+				) {
+
+			if(!defined('INC_FROM_DOLIBARR'))define('INC_FROM_DOLIBARR',true);
+			dol_include_once('/tarif/config.php');
+			dol_include_once('/tarif/class/tarif.class.php');
+			dol_include_once('/commande/class/commande.class.php');
+			dol_include_once('/fourn/class/fournisseur.commande.class.php');
+			dol_include_once('/compta/facture/class/facture.class.php');
+			dol_include_once('/comm/propal/class/propal.class.php');
+			dol_include_once('/dispatch/class/dispatchdetail.class.php');
+			
+			global $user, $db,$conf;
+			
 			if(get_class($object) == 'PropaleLigne'){
 				 $table = 'propal';
 				 $tabledet = 'propaldet';
@@ -143,59 +146,10 @@ class Interfacemetretrigger
 				$parentfield = 'fk_commande';
 			}
 			
-			if(!empty($_REQUEST['metre_larg'])){ //Si un poids produit a été transmis
-				$metre_larg =$_REQUEST['metre_larg'] ;
-				
-			}
-			if(!empty($_REQUEST['metre'])){ //Si un poids produit a été transmis
-				$metre_long =$_REQUEST['metre'] ;
-				
-			}
-			if(!empty($metre_larg)){
-				$metre = $metre_long."*".$metre_larg;
-			} else {
-				$metre = $metre_long;
-			}
-			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET metre = '".$metre."' WHERE rowid = ".$object->rowid);
-			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET metre = '".$metre."' WHERE rowid = ".$object->rowid);
+			$metre = GETPOST('metre');
 			
-			$monUrl = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']; 
-			header('Location: '.$monUrl);
-			
-			
-		}elseif(($action == 'LINEORDER_UPDATE' || $action == 'LINEPROPAL_UPDATE' || $action == 'LINEBILL_UPDATE'  )&& $conf->global->METRE_UNIT_PRICE_BY_CALCULATION){
-			if(get_class($object) == 'PropaleLigne'){
-				 $table = 'propal';
-				 $tabledet = 'propaldet';
-			}
-			elseif(get_class($object) == 'OrderLine'){
-				 $table = 'commande';
-				 $tabledet = 'commandedet';
-			}
-			elseif(get_class($object) == 'FactureLigne'){
-				 $table = 'facture';
-				 $tabledet = 'facturedet';
-			}
-			elseif(get_class($object) == 'CommandeFournisseur' || get_class($object) == 'CommandeFournisseurLigne'){
-				$table = "commande_fournisseur"; 
-				$tabledet = 'commande_fournisseurdet'; 
-				$parentfield = 'fk_commande';
-			}
-			
-			if(!empty($_REQUEST['metre_larg'])){ //Si un poids produit a été transmis
-				$metre_larg =$_REQUEST['metre_larg'] ;
-				
-			}
-			if(!empty($_REQUEST['metre_long'])){ //Si un poids produit a été transmis
-				$metre_long =$_REQUEST['metre_long'] ;
-				
-			}
-			
-			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$table." SET metre = '".$metre."' WHERE rowid = ".$object->rowid);
-			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET metre = '".$metre."' WHERE rowid = ".$object->rowid);
-			
-			$monUrl = "http://".$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']; 
-			header('Location: '.$monUrl);
+			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET metre = '".$this->db->escape($metre)."' WHERE rowid = ".$object->rowid);
+		
 		}
 
         return 0;
