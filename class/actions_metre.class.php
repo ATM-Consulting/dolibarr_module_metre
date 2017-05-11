@@ -72,49 +72,56 @@ class Actionsmetre
 			?>
 				<script type="text/javascript">
 					var dialog = '<div id="dialog-metre" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p>'
-						+'<label name="label_long"><?php echo $langs->trans('Height') ?> :</label><input type="text" name="metre_long" />'
-						+'<label name="label_larg"><?php echo $langs->trans('Width') ?> : </label><input type="text" name="metre_larg" />'
-						+'<label name="label_depth"><?php echo $langs->trans('Depth') ?> : </label><input type="text" name="metre_depth" />'
+						+'<div class="standard"><div><label name="label_long"><?php echo $langs->trans('Height') ?> :</label><input type="text" name="metre_long" /></div>'
+						+'<div><label name="label_larg"><?php echo $langs->trans('Width') ?> : </label><input type="text" name="metre_larg" /></div>'
+						+'<div rel="metre_depth"><label name="label_depth"><?php echo $langs->trans('Depth') ?> : </label><input type="text" name="metre_depth" /></div></div>'
+						+'<div class="advanced" rel="formule" style="display:none;"><label name="formule"><?php echo $langs->trans('Formule') ?> : </label><br /><textarea name="formule" size="20" rows="3"></textarea></div>'
 					+'</p></div>';
 					$(document).ready(function() {
+
+						var metre_dialog_standard = 1;
+						
 						$('body').append(dialog);
 						$('#dialog-metre').dialog({
 							autoOpen:false
 							,buttons: { 
-										"<?php echo $langs->trans('AdvancedMode') ?>" : function(){
-											$('input[name=metre_larg]').hide();
-											$('label[name=label_larg]').hide();
-											if($("span:contains('<?php echo $langs->trans('AdvancedMode') ?>')")){
-												if($("span:contains('Mode Standard')").text()){
-													$("span:contains('Mode Standard')").text('Mode Avancé');
-													$('label[name=label_long]').text('<?php echo $langs->trans('Height') ?>  :');
-													$('input[name=metre_larg]').show();
-													$('label[name=label_larg]').show();
-												} else {
-													$("span:contains('<?php echo $langs->trans('AdvancedMode') ?>')").text('Mode Standard');
-													$('label[name=label_long]').text('<?php echo $langs->trans('Formule') ?>  :');
-													$('input[name=metre_larg]').val("");
-												}
-											
+										"<?php echo $langs->transnoentities('AdvancedMode') ?>" : function(){
+
+											if(metre_dialog_standard == 1) {
+												$('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('StandardMode') ?>');
+												$('div.standard').hide();
+												$('div.advanced').show();
+												metre_dialog_standard = 0;
 											}
+											else{
+												$('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('AdvancedMode') ?>');
+
+												$('div.standard').show();
+												$('div.advanced').hide();
+												
+												metre_dialog_standard = 1;
+											}
+
+
 										}
 										,"Ok": function() {
-											var metre = $('input[name=metre_long]').val();
-											var larg = $('input[name=metre_larg]').val();
-											var depth = $('input[name=metre_depth]').val();
-											
-											$('input[name=metre]').val( metre );
-											if(larg == ""){
-												$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
+
+											if(metre_dialog_standard == 1) {
+												var vlong = $('input[name=metre_long]').val();
+												var larg = $('input[name=metre_larg]').val();
+												var depth = $('input[name=metre_depth]').val();
+												var metre = "("+vlong +")*("+larg+")*("+depth+")";
+
 												
-											} else {
-											
-												metre = "("+metre +")*("+larg+")*("+depth+")";
-												
-												$('input[name=qty').val( eval( ' ('+ metre +')' ) );
-												$('input[name=metre]').val( metre );
 											}
-										
+											else {
+												var metre = $("textarea[name=formule]").val();
+											}
+
+											$('input[name=metre]').val( metre );
+											$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
+											
+											
 											$(this).dialog("close");
 										}
 										,"Annuler": function() {
@@ -125,7 +132,10 @@ class Actionsmetre
 					});
 					
 					function show_Metre() {
-						$('input[name=metre_long]').val( $('input[name=metre]').val() );	
+						var metre = $('input[name=metre]').val();
+						
+						$("textarea[name=formule]").val( metre );
+							
 						$('#dialog-metre').dialog('open');	
 					}
 					

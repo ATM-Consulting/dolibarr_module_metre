@@ -9,3 +9,6 @@ UnitPriceByCalculation = Prix unitaire hors taxe calculé en fonction de la form
 tarifSaveMetre = Metré
 Cond = Cond.
 UseWeight = Utiliser un poids comme unité
+
+StandardMode=Mode Standard
+AdvancedMode=Mode Avancé
