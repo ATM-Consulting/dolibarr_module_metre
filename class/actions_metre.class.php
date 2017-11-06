@@ -108,11 +108,10 @@ class Actionsmetre
 												var metre = $("textarea[name=formule]").val();
 											}
 
+											$(this).dialog("close");
+
 											$('input[name=metre]').val( metre );
 											$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
-											
-											
-											$(this).dialog("close");
 										}
 										,"Annuler": function() {
 											$(this).dialog("close");
