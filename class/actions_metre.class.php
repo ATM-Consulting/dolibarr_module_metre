@@ -68,6 +68,8 @@ class Actionsmetre
         {
         	$langs->load('metre@metre');
         	
+        	$tag = md5(rand(0,1000).time());
+        	
 			?>
 				<script type="text/javascript">
 					var metre_dialog_standard = 1;
@@ -78,6 +80,31 @@ class Actionsmetre
 						+'<div rel="metre_depth"><label name="label_depth"><?php echo $langs->trans('Depth') ?> : </label><input type="text" name="metre_depth" /></div></div>'
 						+'<div class="advanced" rel="formule" style="display:none;"><label name="formule"><?php echo $langs->trans('Formule') ?> : </label><br /><textarea name="formule" size="20" rows="3"></textarea></div>'
 					+'</p></div>';
+
+					function setMetreFromDialog() {
+
+						if(metre_dialog_standard == 1) {
+							var vlong = parseFloat( $('input[name=metre_long]').val() );
+							var larg = parseFloat( $('input[name=metre_larg]').val() );
+							var depth =parseFloat( $('input[name=metre_depth]').val() );
+
+							if(isNaN(vlong)) vlong = 1;
+							if(isNaN(larg)) larg = 1;
+							if(isNaN(depth)) depth = 1;
+							
+							var metre = "("+vlong +")*("+larg+")*("+depth+")";
+
+							
+						}
+						else {
+							var metre = $("textarea[name=formule]").val();
+						}
+
+						$input = $('input[name=metre_<?php echo $tag?>]');
+						$input.val( metre );
+						$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
+						console.log(metre,$input,$input.val() );						
+					}
 					
 					$(document).ready(function() {
 						
@@ -90,29 +117,16 @@ class Actionsmetre
 
 										}
 										,"Ok": function() {
-
-											if(metre_dialog_standard == 1) {
-												var vlong = parseFloat( $('input[name=metre_long]').val() );
-												var larg = parseFloat( $('input[name=metre_larg]').val() );
-												var depth =parseFloat( $('input[name=metre_depth]').val() );
-
-												if(isNaN(vlong)) vlong = 1;
-												if(isNaN(larg)) larg = 1;
-												if(isNaN(depth)) depth = 1;
-												
-												var metre = "("+vlong +")*("+larg+")*("+depth+")";
-
-												
+											try {
+												setMetreFromDialog();
 											}
-											else {
-												var metre = $("textarea[name=formule]").val();
+											catch(exception){
+											    null;
 											}
-
-											$('input[name=metre]').val( metre );
-											$('input[name=qty]').val( eval( ' ('+ metre +')' ) );	
+											finally {
+												$('#dialog-metre').dialog("close");
+											}
 											
-											
-											$(this).dialog("close");
 										}
 										,"Annuler": function() {
 											$(this).dialog("close");
@@ -147,27 +161,31 @@ class Actionsmetre
 							echo 'metre_dialog_show();'; // switch en mode avancé
 						}
 						
-						echo ' $("input[name=metre]").val("'.$metre_formule.'"); ';
+						echo ' $("input[name=metre_'.$tag.']").val("'.$metre_formule.'"); ';
 						
 					}		
 						?>
-
 						var $qtyfield = $('input#qty'); 
-	         			$qtyfield.closest('td').attr('nowrap','nowrap');
-	         			$qtyfield.after(' <a href="javascript:show_Metre()"><?php echo img_picto($langs->trans('Metre'), 'object_metre@metre',' align="middle" ') ?></a><input type="hidden" name="metre" value="<?php echo $metre_formule; ?>" />');
-					
+	         			$qtyfield.wrap('<span style="white-space:nowrap;" />');
+	         			$qtyfield.after(' <a href="javascript:show_Metre()"><?php echo img_picto($langs->trans('Metre'), 'object_metre@metre',' align="middle" ') ?></a><input type="hidden" name="metre_tag_code" value="<?php echo $tag; ?>" /><input type="hidden" name="metre_<?php echo $tag?>" value="<?php echo $metre_formule; ?>" />');
+	         			$('input[name=metre]').change(function() {
+							console.log($(this).val());
+	         			});
 					});
 
 					function metre_dialog_show() {
 						
 						if(metre_dialog_standard == 1) {
-							$('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('StandardMode') ?>');
+							if($('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').length>0) $('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('StandardMode') ?>');
+							else $('div.ui-dialog-buttonset > button.ui-button:first').text('<?php echo $langs->transnoentities('StandardMode') ?>');
+								
 							$('div.standard').hide();
 							$('div.advanced').show();
 							metre_dialog_standard = 0;
 						}
 						else{
-							$('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('AdvancedMode') ?>');
+							if($('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').length>0) $('div.ui-dialog-buttonset > button.ui-button:first > span.ui-button-text').text('<?php echo $langs->transnoentities('AdvancedMode') ?>');
+							else $('div.ui-dialog-buttonset > button.ui-button:first').text('<?php echo $langs->transnoentities('AdvancedMode') ?>');
 
 							$('div.standard').show();
 							$('div.advanced').hide();
@@ -179,9 +197,10 @@ class Actionsmetre
 					}
 					
 					function show_Metre() {
-						var metre = $('input[name=metre]').val();
-						
-						$("textarea[name=formule]").val( metre );
+						var metre = $('input[name=metre_<?php echo $tag; ?>]').val();
+						console.log('show_Metre',metre);
+							
+						$("#dialog-metre textarea[name=formule]").val( metre );
 							
 						$('#dialog-metre').dialog('open');	
 					}

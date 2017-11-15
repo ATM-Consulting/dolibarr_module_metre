@@ -146,7 +146,8 @@ class Interfacemetretrigger
 				$parentfield = 'fk_commande';
 			}
 			
-			$metre = GETPOST('metre');
+			$tag = GETPOST('metre_tag_code');
+			$metre = GETPOST('metre_'.$tag);
 			
 			$this->db->query("UPDATE ".MAIN_DB_PREFIX.$tabledet." SET metre = '".$this->db->escape($metre)."' WHERE rowid = ".$object->rowid);
 		
