@@ -74,7 +74,7 @@ class Actionsmetre
 				<script type="text/javascript">
 					var metre_dialog_standard = 1;
 				
-					var dialog = '<div id="dialog-metre" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p>'
+					var dialog = '<div id="dialog-metre" style="display:none;" title="<?php print $langs->trans('tarifSaveMetre'); ?>"><p>'
 						+'<div class="standard"><div><label name="label_long"><?php echo $langs->trans('Height') ?> :</label><input type="text" name="metre_long" /></div>'
 						+'<div><label name="label_larg"><?php echo $langs->trans('Width') ?> : </label><input type="text" name="metre_larg" /></div>'
 						+'<div rel="metre_depth"><label name="label_depth"><?php echo $langs->trans('Depth') ?> : </label><input type="text" name="metre_depth" /></div></div>'
