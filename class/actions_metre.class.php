@@ -107,8 +107,12 @@ class Actionsmetre
 					}
 					
 					$(document).ready(function() {
-						
-						$('body').append(dialog);
+
+						if($('#dialog-metre') == undefined )
+						{
+							$('body').append(dialog);
+						}
+
 						$('#dialog-metre').dialog({
 							autoOpen:false
 							,buttons: { 
